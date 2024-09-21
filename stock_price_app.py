@@ -112,20 +112,34 @@ if st.button("Predict Future Prices"):
     future_dates = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-12-31", freq='B')
     future_data = pd.DataFrame(index=future_dates)
 
-    # Prepare input data for predictions
+    # Prepare input data for predictions (last known values)
     last_known_values = X.iloc[-1].to_frame().T  # Get the last known values as a DataFrame
-    future_data = np.tile(last_known_values.values.flatten(), (len(future_dates), 1))  # Repeat for each future date
+    future_data_no_noise = np.tile(last_known_values.values.flatten(), (len(future_dates), 1))  # Repeat for each future date
 
-    # Generate variations for future predictions
-    random_variation = np.random.normal(loc=0, scale=0.05 * last_known_values.values.flatten(), size=future_data.shape)
-    future_data += random_variation
+    # Predict future prices without noise (specific correct values)
+    future_predictions_no_noise = best_ridge.predict(scaler.transform(future_data_no_noise))
 
-    # Predict future prices
-    future_predictions = best_ridge.predict(scaler.transform(future_data))
+    # Generate random variations (noise)
+    random_variation = np.random.normal(loc=0, scale=0.05 * last_known_values.values.flatten(), size=future_data_no_noise.shape)
+    future_data_with_noise = future_data_no_noise + random_variation
 
-    # Display future predictions
-    future_results = pd.DataFrame({'Date': future_dates, 'Predicted Price': future_predictions})
-    st.line_chart(future_results.set_index('Date'))
+    # Predict future prices with noise (for unpredictable cases)
+    future_predictions_with_noise = best_ridge.predict(scaler.transform(future_data_with_noise))
 
-    st.subheader("Future Predictions Summary")
-    st.dataframe(future_results)
+    # Display future predictions with noise
+    future_results_with_noise = pd.DataFrame({'Date': future_dates, 'Predicted Price (With Noise)': future_predictions_with_noise})
+    st.line_chart(future_results_with_noise.set_index('Date'))
+
+    st.subheader("Future Predictions Summary (With Noise)")
+    st.dataframe(future_results_with_noise)
+
+    # Display correct future predictions without noise
+    future_results_no_noise = pd.DataFrame({'Date': future_dates, 'Predicted Price (Without Noise)': future_predictions_no_noise})
+
+    st.subheader("Specific Future Predictions (Without Noise)")
+    st.line_chart(future_results_no_noise.set_index('Date'))
+
+    # Display the final correct value without noise in h2 tag
+    st.subheader("Final Correct Prediction Without Noise")
+    st.write(f"<h2>Predicted Stock Price (Final Day): {future_predictions_no_noise[-1]:.2f}</h2>", unsafe_allow_html=True)
+
