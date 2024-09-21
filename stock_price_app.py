@@ -11,10 +11,10 @@ import numpy as np
 st.title('Nvidia Stock Price Prediction with Ridge Regression')
 
 # Add Nvidia logo
-st.image("nvidia.png", width=300)  # Ensure the correct path for the Nvidia logo
+st.image("nvidia.png", width=300) 
 
 # Load Nvidia stock price dataset directly from the path
-file_path = 'NvidiaStockPrice.csv'  # Replace with the correct path to your file
+file_path = 'NvidiaStockPrice.csv' 
 data = pd.read_csv(file_path)
 
 # Show dataset preview
@@ -37,7 +37,7 @@ if data.isnull().sum().any():
 # Feature Engineering: Create additional features (e.g., moving average)
 data['Moving_Avg_5'] = data['Close'].rolling(window=5).mean()
 data['Moving_Avg_10'] = data['Close'].rolling(window=10).mean()
-data = data.dropna()  # Drop rows with NaN values after creating moving averages
+data = data.dropna()  
 
 # Define features (X) and target (y)
 X = data.drop('Close', axis=1)
